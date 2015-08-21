@@ -1,1 +1,1 @@
-angular.module('emissary', ['app.routes', 'mainCtrl']);
+angular.module('emissary', ['app-routes', 'mainCtrl']);
