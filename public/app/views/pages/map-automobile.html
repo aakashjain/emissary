@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Something</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+#map {
+  height: 100%;
+}
+
+.controls {
+  margin-top: 10px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#pac-input {
+  background-color: #fff;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 300px;
+}
+
+#pac-input:focus {
+  border-color: #4d90fe;
+}
+
+#id {
+  font-family: 'Roboto','sans-serif';
+}
+.pac-container {
+  font-family: 'Roboto';
+}
+
+
+  	</style>
+ 	</head>
+  <body>
+    <input id="pac-input1" class="controls" type="text"
+        placeholder="Enter a source">
+    <input id="pac-input2" class="controls" type="text"
+        placeholder="Enter a destination">
+    <p>Total Distance: <span id="total"></span></p>
+    <p>Link: <a id="link"></a></p>
+    <div id="map"></div>
+    <script>
+
+var oldDirections = [];
+var currentDirections = null;
+
+function computeTotalDistance(result, places) {
+  var total = 0;
+  var link="https://www.google.com/maps/dir/";
+  var myroute = result.routes[0];
+
+  for (var i = 0; i < result.geocoded_waypoints.length; i++) {
+    var pid = result.geocoded_waypoints[i].place_id;
+    places.getDetails({
+      placeId: pid
+    }, function(place, status) {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        console.log(place.geometry.location)
+        link=link+place.geometry.location.G+","+place.geometry.location.K+"/"
+        document.getElementById('link').setAttribute("href",link);
+        document.getElementById('link').innerHTML="click here"
+      }
+    });
+  }
+  for (var i = 0; i < myroute.legs.length; i++) {
+    total += myroute.legs[i].distance.value;
+  }
+
+  total = total / 1000;
+  document.getElementById('total').innerHTML = total + ' km';
+}
+
+function displayRoute(origin, destination, service, display, places) {
+  service.route({
+    origin: origin,
+    destination: destination,
+    travelMode: google.maps.TravelMode.DRIVING,
+    avoidTolls: true
+  }, function(response, status) {
+    if (status === google.maps.DirectionsStatus.OK) {
+      display.setDirections(response);
+      computeTotalDistance(response, places);
+    } else {
+      	alert('Could not display directions due to: ' + status);
+    }
+  });
+}
+
+function initMap() {
+  var map = new google.maps.Map(document.getElementById('map'), {
+    center: {lat: 0, lng: 0},
+    zoom: 2
+  });
+
+  var placesService = new google.maps.places.PlacesService(map);
+  var directionsService = new google.maps.DirectionsService;
+  var directionsDisplay = new google.maps.DirectionsRenderer({
+    draggable: true,
+    map: map,
+    panel: document.getElementById('directionsPanel')
+  });
+
+  directionsDisplay.addListener('directions_changed', function() {
+    if (currentDirections) {
+      oldDirections.push(currentDirections);
+    }
+
+    currentDirections = directionsDisplay.getDirections();
+    computeTotalDistance(currentDirections, placesService);
+    pid1=currentDirections.geocoded_waypoints[0].place_id;
+    pid2=currentDirections.geocoded_waypoints[currentDirections.geocoded_waypoints.length-1].place_id;
+    
+    //marker1
+    placesService.getDetails({
+      placeId: pid1
+    }, function(place, status) {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        input1.value=place.formatted_address;
+        marker1.setPosition(place.geometry.location);
+      }
+    });
+
+    //marker2
+    placesService.getDetails({
+      placeId: pid2
+    }, function(place, status) {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        input2.value=place.formatted_address;
+        marker2.setPosition(place.geometry.location);
+      }
+    });
+  });
+
+  var geocoder = new google.maps.Geocoder();
+
+  var input1 =(document.getElementById('pac-input1'));
+  var input2 = (document.getElementById('pac-input2'));
+  var distance = (document.getElementById('total'));
+
+  map.controls[google.maps.ControlPosition.LEFT_TOP].push(input1);
+  map.controls[google.maps.ControlPosition.LEFT_TOP].push(input2);
+
+  var marker1 = new google.maps.Marker({
+    map: map,
+    draggable: true,
+    animation: google.maps.Animation.DROP,
+    anchorPoint: new google.maps.Point(0, 0)
+  });
+  marker1.setVisible(false);
+  var marker1set = false;
+
+  var marker2 = new google.maps.Marker({
+    map: map,
+    draggable: true,
+    animation: google.maps.Animation.DROP,
+    anchorPoint: new google.maps.Point(0, 0)
+  });
+  marker2.setVisible(false);
+  var marker2set = false;
+
+  var latlngbounds = new google.maps.LatLngBounds();
+
+  navigator.geolocation.getCurrentPosition(function(position) {
+    var initialLocation = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+    map.setCenter(initialLocation);
+    marker1.setPosition(initialLocation);
+    marker1.setVisible(true);
+    marker1set = true;
+    map.setZoom(15);
+    geocoder.geocode({'latLng': initialLocation}, function(result, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        if (result[1]) {
+          input1.value = result[1].formatted_address;
+        }
+      }
+    });
+  }, function() {});
+
+  var autocomplete1 = new google.maps.places.Autocomplete(input1);
+  autocomplete1.bindTo('bounds', map);
+
+  var autocomplete2 = new google.maps.places.Autocomplete(input2);
+  autocomplete2.bindTo('bounds', map);
+
+  autocomplete1.addListener('place_changed', function() {
+    var place = autocomplete1.getPlace();
+    
+    if (!place.geometry) {
+      window.alert("Autocomplete's returned place contains no geometry");
+      return;
+    }
+    marker1.setPosition(place.geometry.location);
+    marker1.setVisible(true);
+    marker1set = true;
+    latlngbounds = new google.maps.LatLngBounds();
+    latlngbounds.extend(marker1.getPosition());
+
+    if (marker2set) {
+      latlngbounds.extend(marker2.getPosition());
+      map.fitBounds(latlngbounds);
+      displayRoute(marker1.getPosition(),marker2.getPosition(),directionsService,directionsDisplay, placesService);
+      marker1.setMap(null);
+      marker2.setMap(null);
+    } else {
+      map.setCenter(place.geometry.location);
+      map.setZoom(15);
+    }
+
+    var address = '';
+    if (place.address_components) {
+      address = [
+        (place.address_components[0] && place.address_components[0].short_name || ''),
+        (place.address_components[1] && place.address_components[1].short_name || ''),
+        (place.address_components[2] && place.address_components[2].short_name || '')
+      ].join(' ');
+    }
+  });
+
+autocomplete2.addListener('place_changed', function() {
+    var place = autocomplete2.getPlace();
+
+    if (!place.geometry) {
+      window.alert("Autocomplete's returned place contains no geometry");
+      return;
+    }
+    marker2.setPosition(place.geometry.location);
+    marker2.setVisible(true);
+    marker2set = true;
+    latlngbounds = new google.maps.LatLngBounds();
+    latlngbounds.extend(marker2.getPosition());
+    
+    if (marker1set) {
+      latlngbounds.extend(marker1.getPosition());
+      map.fitBounds(latlngbounds);
+      displayRoute(marker1.getPosition(),marker2.getPosition(),directionsService,directionsDisplay, placesService);
+      marker1.setMap(null);
+      marker2.setMap(null);
+    } else {
+      map.setCenter(place.geometry.location);
+      map.setZoom(15);
+    }
+
+    var address = '';
+    if (place.address_components) {
+      address = [
+        (place.address_components[0] && place.address_components[0].short_name || ''),
+        (place.address_components[1] && place.address_components[1].short_name || ''),
+        (place.address_components[2] && place.address_components[2].short_name || '')
+      ].join(' ');
+    }
+  });
+
+}
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=places&callback=initMap"
+        async defer></script>
+  </body>
+</html>

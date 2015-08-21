@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Something</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+#map {
+  height: 100%;
+}
+
+.controls {
+  margin-top: 10px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#pac-input {
+  background-color: #fff;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 300px;
+}
+
+#pac-input:focus {
+  border-color: #4d90fe;
+}
+
+#id {
+  font-family: 'Roboto','sans-serif';
+}
+.pac-container {
+  font-family: 'Roboto';
+}
+
+
+    </style>
+  </head>
+  <body>
+    <input id="pac-input1" class="controls" type="text"
+        placeholder="Enter a source">
+    <input id="pac-input2" class="controls" type="text"
+        placeholder="Enter a destination">
+    <p>Total Distance: <span id="total"></span></p>
+    <p>Link: <a id="link"></a></p>
+    <div id="map"></div>
+    <script>
+
+var flightPath;
+Math.radians = function(deg)
+{
+  return deg * (Math.PI/180);
+}
+function computeTotalDistance(origin, destination) {
+  var total = 0;
+
+  console.log(origin.G)
+  lat1=origin.G;
+  lon1=origin.K;
+  lat2=destination.G;
+  lon2=destination.K;
+
+  var R = 6371000; // metres
+  var φ1 = Math.radians(lat1);
+  var φ2 = Math.radians(lat2);
+  var Δφ = Math.radians(lat2-lat1);
+  var Δλ = Math.radians(lon2-lon1);
+
+  var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+          Math.cos(φ1) * Math.cos(φ2) *
+          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  var d = R * c;
+  total = d
+
+  total = total / 1000;
+  document.getElementById('total').innerHTML = total + ' km';
+}
+
+function displayRoute(origin, destination, map) {
+  console.log(origin)
+  var flightPlanCoordinates = [
+    origin,
+    destination
+  ];
+  if(flightPath)
+  flightPath.setMap(null);
+  flightPath = new google.maps.Polyline({
+    path: flightPlanCoordinates,
+    geodesic: true,
+    strokeColor: '#FF0000',
+    strokeOpacity: 1.0,
+    strokeWeight: 3
+  });
+  flightPath.setMap(map);
+  computeTotalDistance(origin, destination);
+}
+
+function initMap() {
+  var map = new google.maps.Map(document.getElementById('map'), {
+    center: {lat: 0, lng: 0},
+    zoom: 2
+  });
+
+  var placesService = new google.maps.places.PlacesService(map);
+
+  var geocoder = new google.maps.Geocoder();
+
+  var input1 =(document.getElementById('pac-input1'));
+  var input2 = (document.getElementById('pac-input2'));
+  var distance = (document.getElementById('total'));
+
+  map.controls[google.maps.ControlPosition.LEFT_TOP].push(input1);
+  map.controls[google.maps.ControlPosition.LEFT_TOP].push(input2);
+
+  var marker1 = new google.maps.Marker({
+    map: map,
+    draggable: false,
+    animation: google.maps.Animation.DROP,
+    anchorPoint: new google.maps.Point(0, 0)
+  });
+  marker1.setVisible(false);
+  var marker1set = false;
+
+  var marker2 = new google.maps.Marker({
+    map: map,
+    draggable: false,
+    animation: google.maps.Animation.DROP,
+    anchorPoint: new google.maps.Point(0, 0)
+  });
+  marker2.setVisible(false);
+  var marker2set = false;
+
+  var latlngbounds = new google.maps.LatLngBounds();
+
+  navigator.geolocation.getCurrentPosition(function(position) {
+    var initialLocation = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+    map.setCenter(initialLocation);
+    marker1.setPosition(initialLocation);
+    marker1.setVisible(true);
+    marker1set = true;
+    map.setZoom(15);
+    geocoder.geocode({'latLng': initialLocation}, function(result, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        if (result[1]) {
+          input1.value = result[1].formatted_address;
+        }
+      }
+    });
+  }, function() {});
+
+  var autocomplete1 = new google.maps.places.Autocomplete(input1);
+  autocomplete1.bindTo('bounds', map);
+
+  var autocomplete2 = new google.maps.places.Autocomplete(input2);
+  autocomplete2.bindTo('bounds', map);
+
+  autocomplete1.addListener('place_changed', function() {
+    var place = autocomplete1.getPlace();
+    
+    if (!place.geometry) {
+      window.alert("Autocomplete's returned place contains no geometry");
+      return;
+    }
+    marker1.setPosition(place.geometry.location);
+    marker1.setVisible(true);
+    marker1set = true;
+    latlngbounds = new google.maps.LatLngBounds();
+    latlngbounds.extend(marker1.getPosition());
+
+    if (marker2set) {
+      latlngbounds.extend(marker2.getPosition());
+      map.fitBounds(latlngbounds);
+      displayRoute(marker1.getPosition(),marker2.getPosition(),map);
+    } else {
+      map.setCenter(place.geometry.location);
+      map.setZoom(15);
+    }
+  });
+
+autocomplete2.addListener('place_changed', function() {
+    var place = autocomplete2.getPlace();
+
+    if (!place.geometry) {
+      window.alert("Autocomplete's returned place contains no geometry");
+      return;
+    }
+    marker2.setPosition(place.geometry.location);
+    marker2.setVisible(true);
+    marker2set = true;
+    latlngbounds = new google.maps.LatLngBounds();
+    latlngbounds.extend(marker2.getPosition());
+    
+    if (marker1set) {
+      latlngbounds.extend(marker1.getPosition());
+      map.fitBounds(latlngbounds);
+      displayRoute(marker1.getPosition(),marker2.getPosition(),map);
+    } else {
+      map.setCenter(place.geometry.location);
+      map.setZoom(15);
+    }
+  });
+
+}
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=places&callback=initMap"
+        async defer></script>
+  </body>
+</html>

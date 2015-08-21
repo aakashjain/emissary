@@ -43,7 +43,7 @@ passport.use(new FacebookStrategy({
 						} else {
 							done(null, newUser);
 						}
-					})
+					});
 				}
 			});
 		});
@@ -84,7 +84,7 @@ userRouter.use(function(req, res, next) {
 });
 
 userRouter.get('/', function(req, res) {
-	res.send(req.user);
+	res.json(req.user);
 });
 
 userRouter.post('/newtrip', function(req, res) {
@@ -97,23 +97,11 @@ userRouter.post('/newtrip', function(req, res) {
 			res.redirect('/plane');
 		break;
 
-		case 'train':
-			res.redirect('/train');
+		case 'public':
+			res.redirect('/public');
 		break;
 	}
 });
-
-// userRouter.get('/new/car', function(req, res) {
-	
-// });
-
-// userRouter.get('/new/plane', function(req, res) {
-	
-// });
-
-// userRouter.get('/new/train', function(req, res) {
-	
-// });
 
 userRouter.post('/savetrip', function(req, res) {
 	var trip = new Trip({
@@ -127,10 +115,10 @@ userRouter.post('/savetrip', function(req, res) {
 	req.user.save(function(err) {
 		if(err)
 			console.log(err);
-	})
+	});
 });
 
-app.use('/user', userRouter);
+app.use('/api/user', userRouter);
 
 app.get('/logout', function(req, res) {
 	req.logout();
