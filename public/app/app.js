@@ -1,0 +1,1 @@
+angular.module('emissary', ['app.routes', 'mainCtrl']);

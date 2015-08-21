@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Emissary</title>
+	
+	<link rel="stylesheet" media="screen" href="//netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-route.min.js"></script>
+	<script src="app/controllers/mainCtrl.js"></script>
+	<script src="app/app.routes.js"></script>
+	<script src="app/app.js"></script>
+</head>
+<body class="container" ng-app="emissary" ng-controller="mainController as main">
+	
+	<div class="jumbotron text-center">
+		<h1>{{ main.message }}</h1>
+	</div>
+
+	<div ng-view></div>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "emissary",
+  "version": "0.0.0",
+  "description": "Check CO2 emissions on your trips",
+  "main": "server.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aakashjain/emissary.git"
+  },
+  "author": "bindass",
+  "dependencies": {
+    "body-parser": "^1.13.3",
+    "express": "^4.13.3",
+    "mongoose": "^4.1.3",
+    "passport": "^0.3.0",
+    "passport-facebook": "^2.0.0"
+  }
+}
