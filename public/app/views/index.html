@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<title>Emissary</title>
 	
-	<base href='/'>
+	<base href="/">
 
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
@@ -16,10 +16,21 @@
 	<script src="app/app.routes.js"></script>
 	<script src="app/app.js"></script>
 </head>
-<body class="container" ng-app="emissaryApp" ng-controller="mainController as main">
+<body class="container" ng-app="emissaryApp">
 
-	<div class="jumbotron text-center">
-		<h1>{{ main.message }}</h1>
+	<div class="navbar">
+		<span class="navbar-brand">Emissary</span>
+		<ul class="nav navbar-nav navbar-right">
+			<li>
+				<a href="https://github.com/aakashjain/emissary">Github</a>
+			</li>
+			<li>
+				<a href="/user">Dashboard</a>
+			</li>
+			<li>
+				<a href="/logout">Logout</a>
+			</li>
+		</ul>
 	</div>
 
 	<div ng-view></div>

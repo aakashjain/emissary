@@ -10,7 +10,7 @@ angular.module('app.routes', ['ngRoute'])
 		controllerAs: 'main'
 	})
 
-	.when('/user', {
+	.when('/dash', {
 		templateUrl: 'app/views/pages/dash.html',
 		controller: 'userController',
 		controllerAs: 'user'
